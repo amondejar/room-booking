@@ -98,6 +98,21 @@ Implement BK-007 with its tests. Follow the spectrace skill.
 `dotnet spectrace context BK-007` shows what the agent receives: the statement, the criteria, where the code goes and
 which files to read first.
 
+## From a user story to a spec
+
+New work starts as a GitHub issue with the **User story** template (`.github/ISSUE_TEMPLATE/user-story.yml`).
+Before anyone writes code, the story becomes a requirement in `specs/` with status `proposed`, and the team
+approves it in a pull request. The `story-to-spec` skill (`.claude/skills/story-to-spec/SKILL.md`) teaches a coding
+agent to do that first step:
+
+```text
+Turn issue #12 into a spec. Follow the story-to-spec skill.
+```
+
+The agent reads the issue with `gh`, checks the existing requirements and code through the SpecTrace MCP server,
+writes an EARS statement with testable criteria, and lists what the story leaves open instead of deciding it.
+The source issue is kept as a note under the requirement (`> Source: ...`).
+
 ## CI
 
 `.github/workflows/ci.yml` builds with the SpecTrace diagnostics as errors, runs the tests and publishes the

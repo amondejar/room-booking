@@ -1,0 +1,48 @@
+name: User story
+description: Something a user needs from RoomBooking. It becomes a requirement in specs/ before anyone writes code.
+title: "[Story] "
+labels: ["user-story"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the need, not the solution. An agent or a developer turns this story into a requirement
+        in `specs/*.spec.md` (status `proposed`), and the team approves it in a pull request.
+  - type: input
+    id: as-a
+    attributes:
+      label: As a
+      placeholder: organizer, employee, facilities team...
+    validations:
+      required: true
+  - type: textarea
+    id: i-want
+    attributes:
+      label: I want
+      placeholder: to move a booking to another time without cancelling it
+    validations:
+      required: true
+  - type: textarea
+    id: so-that
+    attributes:
+      label: So that
+      placeholder: I keep the room and the attendees do not get a new invitation
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: One per line. Given / When / Then if you can, plain sentences are fine too. Leave it empty if you are not sure yet.
+      placeholder: |
+        - Given a booking tomorrow at 10:00, when I move it to 12:00 and the room is free, then it is moved.
+        - Given the room is taken at 12:00, when I move it, then I get an error and the booking stays at 10:00.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Context, examples, links, anything that is still open.
+    validations:
+      required: false
