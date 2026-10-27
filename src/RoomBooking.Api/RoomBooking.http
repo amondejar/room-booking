@@ -41,6 +41,20 @@ Content-Type: application/json
 GET {{api}}/bookings/mine
 X-User: ana@example.com
 
+### BK-007: weekly booking for 4 weeks (weeks already taken are skipped and reported)
+POST {{api}}/bookings/recurring
+X-User: ana@example.com
+Content-Type: application/json
+
+{
+  "roomId": "boreal",
+  "title": "Team sync",
+  "start": "{{day}}T09:00:00",
+  "end": "{{day}}T10:00:00",
+  "attendees": 6,
+  "weeks": 4
+}
+
 ### BK-005: cancel (replace the id with the one returned when booking)
 POST {{api}}/bookings/00000000-0000-0000-0000-000000000000/cancel
 X-User: ana@example.com

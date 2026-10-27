@@ -8,4 +8,5 @@ public sealed class BookingOptions
     public TimeOnly OpensAt { get; set; } = new(8, 0);
     public TimeOnly ClosesAt { get; set; } = new(20, 0);
     public TimeSpan MaxDuration { get; set; } = TimeSpan.FromHours(4);
+    public int MaxRecurringWeeks { get; set; } = 12;
 }

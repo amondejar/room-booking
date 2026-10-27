@@ -7,6 +7,11 @@ namespace RoomBooking.Domain;
 
 public sealed record BookingRequest(string RoomId, string Title, DateTime Start, DateTime End, int Attendees);
 
+/// <summary>A week of a recurring booking that could not be booked. Weeks are numbered from 1.</summary>
+public sealed record SkippedWeek(int Week, DateTime Start, DateTime End, string Reason);
+
+public sealed record RecurringBookingResult(IReadOnlyList<Booking> Created, IReadOnlyList<SkippedWeek> Skipped);
+
 /// <summary>The booking rules. HTTP concerns live in the endpoints.</summary>
 public sealed class BookingService
 {
@@ -48,11 +53,9 @@ public sealed class BookingService
     [Implements(Requirements.BK_001)]
     public Result<Booking> Create(BookingRequest request, string organizer)
     {
-        if (FindRoom(request.RoomId) is not { } room) return Error.NotFound($"Room '{request.RoomId}' does not exist.");
-        if (string.IsNullOrWhiteSpace(request.Title)) return Error.Invalid("The title is required.");
-        if (request.End <= request.Start) return Error.Invalid("The end time must be after the start time.");
-        if (CheckSchedule(request) is { } scheduleError) return scheduleError;
-        if (CheckCapacity(room, request.Attendees) is { } capacityError) return capacityError;
+        var validated = Validate(request);
+        if (validated.Error is { } error) return error;
+        var room = validated.Value!;
 
         lock (_store.Sync)
         {
@@ -64,6 +67,49 @@ public sealed class BookingService
             var booking = new Booking(Guid.NewGuid(), room.Id, organizer, request.Title.Trim(), request.Start, request.End, request.Attendees);
             _store.Add(booking);
             return booking;
+        }
+    }
+
+    /// <summary>
+    /// Books the same room and time once a week. The rules that are the same every week (room, title,
+    /// opening hours, duration, capacity) are checked on the first occurrence and reject the whole request;
+    /// weeks whose time is already taken are skipped and reported.
+    /// </summary>
+    [Implements(Requirements.BK_007)]
+    public Result<RecurringBookingResult> CreateWeekly(BookingRequest request, int weeks, string organizer)
+    {
+        if (weeks < 1 || weeks > _options.MaxRecurringWeeks)
+        {
+            return Error.Invalid($"A recurring booking must cover between 1 and {_options.MaxRecurringWeeks} weeks.");
+        }
+
+        var validated = Validate(request);
+        if (validated.Error is { } error) return error;
+        var room = validated.Value!;
+
+        lock (_store.Sync)
+        {
+            var created = new List<Booking>();
+            var skipped = new List<SkippedWeek>();
+            for (var week = 1; week <= weeks; week++)
+            {
+                var offset = TimeSpan.FromDays(7 * (week - 1));
+                var start = request.Start + offset;
+                var end = request.End + offset;
+
+                if (FindConflict(room, start, end) is { } conflict)
+                {
+                    skipped.Add(new SkippedWeek(week, start, end,
+                        $"{room.Name} is already booked from {conflict.Start:HH:mm} to {conflict.End:HH:mm}."));
+                    continue;
+                }
+
+                var booking = new Booking(Guid.NewGuid(), room.Id, organizer, request.Title.Trim(), start, end, request.Attendees);
+                _store.Add(booking);
+                created.Add(booking);
+            }
+
+            return new RecurringBookingResult(created, skipped);
         }
     }
 
@@ -107,6 +153,17 @@ public sealed class BookingService
                 .OrderBy(b => b.Start)
                 .ToList();
         }
+    }
+
+    /// <summary>The rules a booking must meet before checking for overlaps.</summary>
+    private Result<Room> Validate(BookingRequest request)
+    {
+        if (FindRoom(request.RoomId) is not { } room) return Error.NotFound($"Room '{request.RoomId}' does not exist.");
+        if (string.IsNullOrWhiteSpace(request.Title)) return Error.Invalid("The title is required.");
+        if (request.End <= request.Start) return Error.Invalid("The end time must be after the start time.");
+        if (CheckSchedule(request) is { } scheduleError) return scheduleError;
+        if (CheckCapacity(room, request.Attendees) is { } capacityError) return capacityError;
+        return room;
     }
 
     [Implements(Requirements.BK_004)]

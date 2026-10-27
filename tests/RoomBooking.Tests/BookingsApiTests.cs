@@ -263,4 +263,57 @@ public class BookingsApiTests
         Assert.Equal(new[] { upcoming.Id }, mine.Select(b => b.Id).ToArray());
         Assert.DoesNotContain(mine, b => b.Id == finished.Id || b.Id == cancelled.Id);
     }
+
+    // ---------- BK-007: Recurring bookings ----------
+
+    [Fact]
+    [Verifies(Requirements.BK_007, AcceptanceCriteria.BK_007.AC_1)]
+    public async Task Weekly_booking_of_a_free_room_creates_one_booking_per_week()
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var response = await api.BookWeeklyAsync("atlas", TestApi.At(10), TestApi.At(11), weeks: 4);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = (await response.Content.ReadFromJsonAsync<RecurringBookingDto>(TestApi.Json))!;
+        Assert.Empty(result.Skipped);
+        Assert.Equal(
+            Enumerable.Range(0, 4).Select(w => TestApi.At(10).AddDays(7 * w)).ToArray(),
+            result.Bookings.Select(b => b.Start).ToArray());
+        Assert.All(result.Bookings, b => Assert.Equal("atlas", b.RoomId));
+        Assert.Equal(4, (await api.GetAsync<List<BookingDto>>("/bookings/mine", user: "ana@example.com")).Count);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_007, AcceptanceCriteria.BK_007.AC_2)]
+    public async Task Weekly_booking_skips_and_reports_a_taken_week()
+    {
+        await using var api = await TestApi.StartAsync();
+        var week2 = TestApi.At(10).AddDays(7);
+        await api.BookOkAsync("atlas", week2.AddMinutes(30), week2.AddMinutes(90), user: "luis@example.com");
+
+        var response = await api.BookWeeklyAsync("atlas", TestApi.At(10), TestApi.At(11), weeks: 4);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = (await response.Content.ReadFromJsonAsync<RecurringBookingDto>(TestApi.Json))!;
+        Assert.Equal(3, result.Bookings.Count);
+        Assert.DoesNotContain(result.Bookings, b => b.Start == week2);
+        var skipped = Assert.Single(result.Skipped);
+        Assert.Equal(2, skipped.Week);
+        Assert.Equal(week2, skipped.Start);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_007, AcceptanceCriteria.BK_007.AC_3)]
+    public async Task Weekly_booking_for_more_than_twelve_weeks_is_rejected()
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var tooMany = await api.BookWeeklyAsync("atlas", TestApi.At(10), TestApi.At(11), weeks: 13);
+        var maximum = await api.BookWeeklyAsync("boreal", TestApi.At(10), TestApi.At(11), weeks: 12);
+
+        Assert.Equal(HttpStatusCode.BadRequest, tooMany.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, maximum.StatusCode);
+        Assert.Equal(12, (await api.GetAsync<List<BookingDto>>("/bookings/mine", user: "ana@example.com")).Count);
+    }
 }

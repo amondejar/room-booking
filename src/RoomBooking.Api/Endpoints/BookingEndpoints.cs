@@ -17,6 +17,7 @@ public static class BookingEndpoints
         var bookings = app.MapGroup("/bookings").WithTags("Bookings");
 
         bookings.MapPost("/", CreateBooking);
+        bookings.MapPost("/recurring", CreateRecurringBooking);
         bookings.MapGet("/mine", ListMine);
         bookings.MapGet("/{id:guid}", GetBooking).WithName(nameof(GetBooking));
         bookings.MapPost("/{id:guid}/cancel", CancelBooking);
@@ -32,6 +33,17 @@ public static class BookingEndpoints
         var result = service.Create(new BookingRequest(body.RoomId, body.Title, body.Start, body.End, body.Attendees), user);
         return result.IsSuccess
             ? Results.CreatedAtRoute(nameof(GetBooking), new { id = result.Value!.Id }, BookingDto.From(result.Value))
+            : result.Error!.ToProblem();
+    }
+
+    [Implements(Requirements.BK_007)]
+    private static IResult CreateRecurringBooking(BookingService service, HttpRequest http, CreateRecurringBookingDto body)
+    {
+        if (User(http) is not { } user) return Unauthorized();
+
+        var result = service.CreateWeekly(new BookingRequest(body.RoomId, body.Title, body.Start, body.End, body.Attendees), body.Weeks, user);
+        return result.IsSuccess
+            ? Results.Json(RecurringBookingDto.From(result.Value!), statusCode: StatusCodes.Status201Created)
             : result.Error!.ToProblem();
     }
 

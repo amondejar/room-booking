@@ -68,6 +68,16 @@ public sealed class TestApi : IAsyncDisposable
         return (await response.Content.ReadFromJsonAsync<BookingDto>(Json))!;
     }
 
+    public Task<HttpResponseMessage> BookWeeklyAsync(string roomId, DateTime start, DateTime end, int weeks, int attendees = 2, string? user = "ana@example.com", string title = "Weekly")
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bookings/recurring")
+        {
+            Content = JsonContent.Create(new CreateRecurringBookingDto(roomId, title, start, end, attendees, weeks), options: Json),
+        };
+        if (user != null) request.Headers.Add(BookingEndpoints.UserHeader, user);
+        return Client.SendAsync(request);
+    }
+
     public Task<HttpResponseMessage> CancelAsync(Guid bookingId, string user)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/bookings/{bookingId}/cancel");

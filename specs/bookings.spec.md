@@ -68,12 +68,14 @@ ordered by start time.
 - AC-2: Given a cancelled booking and a booking that has already ended, when the organizer lists their bookings, then neither is returned.
 
 ## BK-007: Recurring bookings
-Status: proposed
+Status: approved
 
-> Requested by the facilities team. Not enforced until it is approved.
+> Requested by the facilities team.
 
-When an organizer requests a weekly recurring booking, the system shall create one booking per week
-up to the given end date, skipping the weeks where the room is not free.
+When an organizer requests a weekly recurring booking for a number of weeks,
+the system shall create one booking per week in the same room and time, skipping the weeks
+where the booking is not possible, and report the skipped weeks.
 
 - AC-1: Given a free room, when a weekly booking for 4 weeks is requested, then 4 bookings are created.
 - AC-2: Given a room that is taken in week 2, when a weekly booking for 4 weeks is requested, then 3 bookings are created and week 2 is reported as skipped.
+- AC-3: Given a request for more than 12 weeks, when the booking is requested, then it is rejected with 400 Bad Request.
