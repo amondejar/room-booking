@@ -316,4 +316,21 @@ public class BookingsApiTests
         Assert.Equal(HttpStatusCode.Created, maximum.StatusCode);
         Assert.Equal(12, (await api.GetAsync<List<BookingDto>>("/bookings/mine", user: "ana@example.com")).Count);
     }
+
+    [Fact]
+    [Verifies(Requirements.BK_007, AcceptanceCriteria.BK_007.AC_4)]
+    public async Task Weekly_booking_when_every_week_is_taken_is_a_conflict()
+    {
+        await using var api = await TestApi.StartAsync();
+        for (var week = 0; week < 4; week++)
+        {
+            var start = TestApi.At(10).AddDays(7 * week);
+            await api.BookOkAsync("atlas", start, start.AddHours(1), user: "luis@example.com");
+        }
+
+        var response = await api.BookWeeklyAsync("atlas", TestApi.At(10), TestApi.At(11), weeks: 4);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Empty(await api.GetAsync<List<BookingDto>>("/bookings/mine", user: "ana@example.com"));
+    }
 }

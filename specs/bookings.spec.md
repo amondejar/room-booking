@@ -79,3 +79,4 @@ where the booking is not possible, and report the skipped weeks.
 - AC-1: Given a free room, when a weekly booking for 4 weeks is requested, then 4 bookings are created.
 - AC-2: Given a room that is taken in week 2, when a weekly booking for 4 weeks is requested, then 3 bookings are created and week 2 is reported as skipped.
 - AC-3: Given a request for more than 12 weeks, when the booking is requested, then it is rejected with 400 Bad Request.
+- AC-4: Given a room that is taken in all 4 weeks, when a weekly booking for 4 weeks is requested, then the response is 409 Conflict and no booking is created.

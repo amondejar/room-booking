@@ -109,6 +109,11 @@ public sealed class BookingService
                 created.Add(booking);
             }
 
+            if (created.Count == 0)
+            {
+                return Error.Conflict($"{room.Name} is already booked at that time in all {weeks} weeks.");
+            }
+
             return new RecurringBookingResult(created, skipped);
         }
     }
