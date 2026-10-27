@@ -1,0 +1,13 @@
+# SpecTrace severities. A .globalconfig (not .editorconfig) because coverage diagnostics are reported
+# on the .spec.md files. CI turns these warnings into errors (see .github/workflows/ci.yml).
+is_global = true
+
+# Approved requirement without [Implements].
+dotnet_diagnostic.ST0003.severity = warning
+# Implemented requirement without any [Verifies].
+dotnet_diagnostic.ST0004.severity = warning
+# Acceptance criterion without a test (info by default).
+dotnet_diagnostic.ST0005.severity = warning
+# Spec text changed after the last review (spectrace.lock).
+dotnet_diagnostic.ST0010.severity = warning
+dotnet_diagnostic.ST0011.severity = warning

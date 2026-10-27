@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <RootNamespace>RoomBooking</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Catalog of requirements (RoomBooking.Specs) and build-time traceability checks. -->
+    <PackageReference Include="SpecTrace" Version="$(SpecTraceVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RoomBooking.Tests" />
+  </ItemGroup>
+</Project>

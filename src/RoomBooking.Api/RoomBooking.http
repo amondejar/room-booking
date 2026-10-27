@@ -1,0 +1,46 @@
+# Try the API from Visual Studio, Rider or VS Code (REST Client). Run it first: dotnet run --project src/RoomBooking.Api
+@api = http://localhost:5080
+@day = 2030-01-07
+
+### RM-001: list rooms (only those for 8 people or more)
+GET {{api}}/rooms?minCapacity=8
+
+### RM-002: room details
+GET {{api}}/rooms/atlas
+
+### RM-003: availability of a room for a day
+GET {{api}}/rooms/atlas/availability?date={{day}}
+
+### BK-001: book a room
+POST {{api}}/bookings
+X-User: ana@example.com
+Content-Type: application/json
+
+{
+  "roomId": "atlas",
+  "title": "Sprint planning",
+  "start": "{{day}}T10:00:00",
+  "end": "{{day}}T11:00:00",
+  "attendees": 4
+}
+
+### BK-002: same room, overlapping time -> 409 Conflict
+POST {{api}}/bookings
+X-User: luis@example.com
+Content-Type: application/json
+
+{
+  "roomId": "atlas",
+  "title": "1:1",
+  "start": "{{day}}T10:30:00",
+  "end": "{{day}}T11:30:00",
+  "attendees": 2
+}
+
+### BK-006: my upcoming bookings
+GET {{api}}/bookings/mine
+X-User: ana@example.com
+
+### BK-005: cancel (replace the id with the one returned when booking)
+POST {{api}}/bookings/00000000-0000-0000-0000-000000000000/cancel
+X-User: ana@example.com

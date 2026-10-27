@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- SpecTrace version used by every project. -->
+    <SpecTraceVersion>0.4.1-preview.1</SpecTraceVersion>
+  </PropertyGroup>
+</Project>

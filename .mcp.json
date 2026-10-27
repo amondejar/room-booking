@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "spectrace": {
+      "command": "dotnet",
+      "args": ["spectrace", "mcp"]
+    }
+  }
+}
