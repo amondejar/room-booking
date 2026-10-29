@@ -1,0 +1,7 @@
+{
+  "stryker-config": {
+    "reporters": ["json", "html", "progress"],
+    "disable-bail": true,
+    "ignore-mutations": ["string"]
+  }
+}

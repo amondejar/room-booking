@@ -32,11 +32,13 @@ then the system shall reject the booking with a conflict.
 ## BK-003: Respect room capacity
 Status: approved
 
-If the number of attendees exceeds the capacity of the room,
+If the number of attendees is less than one or exceeds the capacity of the room,
 then the system shall reject the booking.
 
 - AC-1: Given a room with capacity 4, when a booking for 5 attendees is requested, then it is rejected with 400 Bad Request.
 - AC-2: Given a room with capacity 4, when a booking for 4 attendees is requested, then it is created.
+- AC-3: Given any room, when a booking for 0 attendees is requested, then it is rejected with 400 Bad Request.
+- AC-4: Given a room with capacity 4, when a booking for 1 attendee is requested, then it is created.
 
 ## BK-004: Opening hours and duration
 Status: approved
@@ -57,6 +59,7 @@ the system shall move it to state Cancelled.
 - AC-1: Given an upcoming active booking, when its organizer cancels it, then the response is 204 No Content and the booking is Cancelled.
 - AC-2: Given an upcoming active booking, when a different user tries to cancel it, then the response is 403 Forbidden.
 - AC-3: Given a booking that has already started, when its organizer tries to cancel it, then the response is 409 Conflict.
+- AC-4: Given an unknown booking id, when its organizer tries to cancel it, then the response is 404 Not Found.
 
 ## BK-006: My upcoming bookings
 Status: approved
