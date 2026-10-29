@@ -141,6 +141,41 @@ public sealed class BookingService
         }
     }
 
+    /// <summary>Moves an upcoming booking to another time range on the same day; the booking keeps its id.</summary>
+    [Implements(Requirements.BK_008)]
+    public Result<Booking> Move(Guid bookingId, DateTime start, DateTime end, string user)
+    {
+        lock (_store.Sync)
+        {
+            var booking = _store.Bookings.FirstOrDefault(b => b.Id == bookingId);
+            if (booking is null) return Error.NotFound($"Booking '{bookingId}' does not exist.");
+            if (!string.Equals(booking.Organizer, user, StringComparison.OrdinalIgnoreCase))
+            {
+                return Error.Forbidden("Only the organizer can move a booking.");
+            }
+
+            if (!booking.IsActive) return Error.Conflict("The booking is cancelled and can no longer be moved.");
+            if (booking.Start <= Now) return Error.Conflict("The booking has already started and can no longer be moved.");
+
+            if (end <= start) return Error.Invalid("The end time must be after the start time.");
+            if (start.Date != booking.Start.Date) return Error.Invalid("A booking can only be moved within its day.");
+            if (CheckSchedule(new BookingRequest(booking.RoomId, booking.Title, start, end, booking.Attendees)) is { } scheduleError)
+            {
+                return scheduleError;
+            }
+
+            var room = _store.Rooms[booking.RoomId];
+            var conflict = _store.Bookings.FirstOrDefault(b => b.Id != booking.Id && b.RoomId == room.Id && b.IsActive && b.Overlaps(start, end));
+            if (conflict is not null)
+            {
+                return Error.Conflict($"{room.Name} is already booked from {conflict.Start:HH:mm} to {conflict.End:HH:mm}.");
+            }
+
+            booking.Move(start, end);
+            return booking;
+        }
+    }
+
     [Implements(Requirements.BK_006)]
     public IReadOnlyList<Booking> ListUpcoming(string organizer)
     {

@@ -24,8 +24,8 @@ public sealed class Booking
     public string RoomId { get; }
     public string Organizer { get; }
     public string Title { get; }
-    public DateTime Start { get; }
-    public DateTime End { get; }
+    public DateTime Start { get; private set; }
+    public DateTime End { get; private set; }
     public int Attendees { get; }
     public BookingStatus Status { get; private set; } = BookingStatus.Active;
 
@@ -33,6 +33,12 @@ public sealed class Booking
 
     /// <summary>Half-open ranges: a booking that ends at 11:00 does not overlap one that starts at 11:00.</summary>
     public bool Overlaps(DateTime start, DateTime end) => Start < end && start < End;
+
+    internal void Move(DateTime start, DateTime end)
+    {
+        Start = start;
+        End = end;
+    }
 
     internal void Cancel() => Status = BookingStatus.Cancelled;
 }
