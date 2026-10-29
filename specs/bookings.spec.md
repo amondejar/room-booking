@@ -84,19 +84,13 @@ where the booking is not possible, and report the skipped weeks.
 - AC-3: Given a request for more than 12 weeks, when the booking is requested, then it is rejected with 400 Bad Request.
 
 ## BK-008: Move a booking
-Status: proposed
+Status: approved
 
 > Source: https://github.com/amondejar/room-booking/issues/3
-> Open questions:
-> - Is moving to another day rejected, or does "on the same day" only describe the usual case?
-> - Can a booking be moved after it has started (BK-005 forbids cancelling it then)? Can a cancelled booking be moved?
-> - Can the move change the duration (e.g. 10:00-11:00 to 12:00-14:00), or only shift the same duration?
-> - Can the move also change the room, title or attendees, or only the time?
-> - Domain note: `Booking.Start`/`End` are read-only today; moving needs the domain to support changing them.
 
-> Proposed by an agent on 2026-10-27. Review it and change the status to approved to enforce it.
-
-When the organizer of an active booking moves it to another time range on the same day, the system shall keep the same booking with the new time range if the new range meets the booking rules and does not overlap another active booking of the room, and otherwise leave the booking unchanged.
+While a booking is Active and has not started, when its organizer moves it to another time range on the same day,
+the system shall keep the same booking with the new time range if the new range meets the booking rules and does not
+overlap another active booking of the room, and otherwise leave the booking unchanged.
 
 - AC-1: Given an upcoming active booking of room "atlas" from 10:00 to 11:00 and atlas free from 12:00 to 13:00, when its organizer moves it to 12:00-13:00, then it is moved: the booking keeps its id, stays Active and runs from 12:00 to 13:00.
 - AC-2: Given an upcoming booking of atlas from 10:00 to 11:00 and another active booking of atlas from 12:00 to 13:00, when the organizer moves the first booking to 12:00-13:00, then the response is 409 Conflict and the booking still runs from 10:00 to 11:00.
@@ -108,3 +102,7 @@ When the organizer of an active booking moves it to another time range on the sa
 - AC-8: Given an upcoming booking, when its organizer moves it to a range that starts in the past, then the response is 400 Bad Request and the booking is unchanged.
 - AC-9: Given an unknown booking id, when a move is requested, then the response is 404 Not Found.
 - AC-10: Given a request without the X-User header, when a move is requested, then the response is 401 Unauthorized.
+- AC-11: Given an upcoming booking from 10:00 to 11:00, when its organizer moves it to 10:00-11:00 on the next day, then the response is 400 Bad Request and the booking is unchanged.
+- AC-12: Given a booking that has already started, when its organizer tries to move it, then the response is 409 Conflict and the booking is unchanged.
+- AC-13: Given a cancelled booking, when its organizer tries to move it, then the response is 409 Conflict.
+- AC-14: Given an upcoming booking of atlas from 10:00 to 11:00 and atlas free from 12:00 to 14:00, when its organizer moves it to 12:00-14:00, then it is moved and runs from 12:00 to 14:00.
