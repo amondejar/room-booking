@@ -21,6 +21,7 @@ public static class BookingEndpoints
         bookings.MapGet("/mine", ListMine);
         bookings.MapGet("/{id:guid}", GetBooking).WithName(nameof(GetBooking));
         bookings.MapPost("/{id:guid}/cancel", CancelBooking);
+        bookings.MapPost("/{id:guid}/move", MoveBooking);
 
         return app;
     }
@@ -59,6 +60,15 @@ public static class BookingEndpoints
 
         var result = service.Cancel(id, user);
         return result.IsSuccess ? Results.NoContent() : result.Error!.ToProblem();
+    }
+
+    [Implements(Requirements.BK_008)]
+    private static IResult MoveBooking(BookingService service, HttpRequest http, Guid id, MoveBookingDto body)
+    {
+        if (User(http) is not { } user) return Unauthorized();
+
+        var result = service.Move(id, body.Start, body.End, user);
+        return result.IsSuccess ? Results.Ok(BookingDto.From(result.Value!)) : result.Error!.ToProblem();
     }
 
     [Implements(Requirements.BK_006)]

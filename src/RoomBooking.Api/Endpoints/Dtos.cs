@@ -11,6 +11,8 @@ public sealed record AvailabilityDto(string RoomId, DateOnly Date, IReadOnlyList
 
 public sealed record CreateBookingDto(string RoomId, string Title, DateTime Start, DateTime End, int Attendees);
 
+public sealed record MoveBookingDto(DateTime Start, DateTime End);
+
 public sealed record CreateRecurringBookingDto(string RoomId, string Title, DateTime Start, DateTime End, int Attendees, int Weeks);
 
 public sealed record RecurringBookingDto(IReadOnlyList<BookingDto> Bookings, IReadOnlyList<SkippedWeek> Skipped)
