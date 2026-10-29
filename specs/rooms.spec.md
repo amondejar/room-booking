@@ -34,3 +34,4 @@ within opening hours that do not overlap any active booking of that room.
 - AC-1: Given a room without bookings that day, when its availability is requested, then a single slot from opening to closing time is returned.
 - AC-2: Given a booking from 10:00 to 11:00, when the availability is requested, then the slots 08:00–10:00 and 11:00–20:00 are returned.
 - AC-3: Given a cancelled booking from 10:00 to 11:00, when the availability is requested, then that time is reported as free.
+- AC-4: Given an unknown room id, when its availability is requested, then the response is 404 Not Found.

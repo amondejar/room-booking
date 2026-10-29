@@ -1,0 +1,75 @@
+From bdb8d4753223be0cc3f3b33d607dc7dfa3dcb1ec Mon Sep 17 00:00:00 2001
+From: amondejar <amondejar.mail@gmail.com>
+Date: Thu, 29 Oct 2026 17:20:58 +0100
+Subject: [PATCH] Spec: criteria that mutation testing showed were missing
+
+Stryker found code that no test checks and no criterion describes:
+- BK-003: at least one attendee (statement and AC-3), and the boundary of
+  exactly one attendee (AC-4).
+- BK-005 AC-4: cancelling an unknown booking is 404.
+- RM-003 AC-4: the availability of an unknown room is 404.
+
+Also tests/RoomBooking.Tests/stryker-config.json: json report, disable-bail
+(exact per-criterion results) and no string mutations (error messages).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NKcKTj6p3ge1A3NMAqc7ta
+---
+ specs/bookings.spec.md                      | 5 ++++-
+ specs/rooms.spec.md                         | 1 +
+ tests/RoomBooking.Tests/stryker-config.json | 7 +++++++
+ 3 files changed, 12 insertions(+), 1 deletion(-)
+ create mode 100644 tests/RoomBooking.Tests/stryker-config.json
+
+diff --git a/specs/bookings.spec.md b/specs/bookings.spec.md
+index 156a1ee..f2d3c54 100644
+--- a/specs/bookings.spec.md
++++ b/specs/bookings.spec.md
+@@ -32,11 +32,13 @@ then the system shall reject the booking with a conflict.
+ ## BK-003: Respect room capacity
+ Status: approved
+ 
+-If the number of attendees exceeds the capacity of the room,
++If the number of attendees is less than one or exceeds the capacity of the room,
+ then the system shall reject the booking.
+ 
+ - AC-1: Given a room with capacity 4, when a booking for 5 attendees is requested, then it is rejected with 400 Bad Request.
+ - AC-2: Given a room with capacity 4, when a booking for 4 attendees is requested, then it is created.
++- AC-3: Given any room, when a booking for 0 attendees is requested, then it is rejected with 400 Bad Request.
++- AC-4: Given a room with capacity 4, when a booking for 1 attendee is requested, then it is created.
+ 
+ ## BK-004: Opening hours and duration
+ Status: approved
+@@ -57,6 +59,7 @@ the system shall move it to state Cancelled.
+ - AC-1: Given an upcoming active booking, when its organizer cancels it, then the response is 204 No Content and the booking is Cancelled.
+ - AC-2: Given an upcoming active booking, when a different user tries to cancel it, then the response is 403 Forbidden.
+ - AC-3: Given a booking that has already started, when its organizer tries to cancel it, then the response is 409 Conflict.
++- AC-4: Given an unknown booking id, when its organizer tries to cancel it, then the response is 404 Not Found.
+ 
+ ## BK-006: My upcoming bookings
+ Status: approved
+diff --git a/specs/rooms.spec.md b/specs/rooms.spec.md
+index 1a31080..712a78e 100644
+--- a/specs/rooms.spec.md
++++ b/specs/rooms.spec.md
+@@ -34,3 +34,4 @@ within opening hours that do not overlap any active booking of that room.
+ - AC-1: Given a room without bookings that day, when its availability is requested, then a single slot from opening to closing time is returned.
+ - AC-2: Given a booking from 10:00 to 11:00, when the availability is requested, then the slots 08:00–10:00 and 11:00–20:00 are returned.
+ - AC-3: Given a cancelled booking from 10:00 to 11:00, when the availability is requested, then that time is reported as free.
++- AC-4: Given an unknown room id, when its availability is requested, then the response is 404 Not Found.
+diff --git a/tests/RoomBooking.Tests/stryker-config.json b/tests/RoomBooking.Tests/stryker-config.json
+new file mode 100644
+index 0000000..05e8473
+--- /dev/null
++++ b/tests/RoomBooking.Tests/stryker-config.json
+@@ -0,0 +1,7 @@
++{
++  "stryker-config": {
++    "reporters": ["json", "html", "progress"],
++    "disable-bail": true,
++    "ignore-mutations": ["string"]
++  }
++}
+-- 
+2.43.0
+

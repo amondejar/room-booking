@@ -3,7 +3,7 @@
 # until someone reviews the code and tests and runs `dotnet spectrace lock --requirement <ID>` again.
 BK-001 statement:23381be4d389 AC-1:ee818f035e4b AC-2:1a146fe56448 AC-3:00d20ddc36bc AC-4:270499fc3e6d
 BK-002 statement:6be15290e795 AC-1:356d463567c8 AC-2:1b4167843926 AC-3:e511142fb5e4 AC-4:81e57e27ac39
-BK-003 statement:3d5626e2f8b2 AC-1:e54c1ebfcee7 AC-2:49e7cddfe923
+BK-003 statement:4f3227554dc3 AC-1:e54c1ebfcee7 AC-2:49e7cddfe923 AC-3:b29b186e9503 AC-4:432216477202
 BK-004 statement:5babd5689380 AC-1:87765612ec10 AC-2:e40f3f120f86 AC-3:cee7e3801c12
 BK-005 statement:2b0372d03b9c AC-1:a40f99d8b5f8 AC-2:3c8837a254f7 AC-3:bac8e2a0a684
 BK-006 statement:1b9471401013 AC-1:f8f0b8ceacbf AC-2:b2a387f0009e

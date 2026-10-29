@@ -3,9 +3,16 @@
   "isRoot": true,
   "tools": {
     "spectrace.tool": {
-      "version": "0.5.1-preview.1",
+      "version": "0.7.1-preview.1",
       "commands": [
         "spectrace"
+      ],
+      "rollForward": false
+    },
+    "dotnet-stryker": {
+      "version": "5.0.0",
+      "commands": [
+        "dotnet-stryker"
       ],
       "rollForward": false
     }

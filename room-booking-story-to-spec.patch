@@ -1,0 +1,205 @@
+From dcca02544f0e084c7c5676ca17ae01d9ed43f67f Mon Sep 17 00:00:00 2001
+From: amondejar <amondejar.mail@gmail.com>
+Date: Tue, 27 Oct 2026 19:36:11 +0100
+Subject: [PATCH] User stories: issue template and story-to-spec agent skill
+
+- .github/ISSUE_TEMPLATE/user-story.yml: As a / I want / So that / Acceptance criteria / Notes.
+- .claude/skills/story-to-spec: turns a GitHub issue into a proposed requirement with
+  an EARS statement, testable criteria, the source link and the open questions.
+- README: "From a user story to a spec".
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NKcKTj6p3ge1A3NMAqc7ta
+---
+ .claude/skills/story-to-spec/SKILL.md | 87 +++++++++++++++++++++++++++
+ .github/ISSUE_TEMPLATE/config.yml     |  1 +
+ .github/ISSUE_TEMPLATE/user-story.yml | 48 +++++++++++++++
+ README.md                             | 15 +++++
+ 4 files changed, 151 insertions(+)
+ create mode 100644 .claude/skills/story-to-spec/SKILL.md
+ create mode 100644 .github/ISSUE_TEMPLATE/config.yml
+ create mode 100644 .github/ISSUE_TEMPLATE/user-story.yml
+
+diff --git a/.claude/skills/story-to-spec/SKILL.md b/.claude/skills/story-to-spec/SKILL.md
+new file mode 100644
+index 0000000..d3aea1b
+--- /dev/null
++++ b/.claude/skills/story-to-spec/SKILL.md
+@@ -0,0 +1,87 @@
++---
++name: story-to-spec
++description: Turns a GitHub issue (a user story) into a proposed requirement in specs/*.spec.md, with an EARS statement, testable acceptance criteria and the open questions the story leaves. Use it when the task mentions a GitHub issue or user story (#12, "story 12", an issues URL) that has to become a spec. It does not implement anything.
++---
++
++# From a GitHub issue to a spec
++
++A user story says what someone needs. A requirement is the contract the code is checked against. Your job is to
++write that contract **without deciding anything the story does not decide**. A person approves it afterwards.
++
++## 1. Read the story
++
++```bash
++gh issue view <number> --json number,title,body,labels,url,comments
++```
++
++Stories created with the "User story" template have the sections *As a*, *I want*, *So that*,
++*Acceptance criteria* and *Notes*. Read the comments too: decisions are often made there.
++
++## 2. Read what already exists
++
++Use the `spectrace` MCP tools (or `dotnet spectrace report` / `dotnet spectrace context <ID>`):
++
++- `list_requirements`: is this already specified, in full or in part? If so, propose a change to that
++  requirement instead of a new one, and say so.
++- `get_requirement` on the related requirements: the new one must be consistent with them
++  (opening hours, capacity, double booking, who may cancel...).
++- `get_code` with `type` for the domain types it touches (`Booking`, `Room`, `BookingService`...): note what the
++  domain does not support yet (for example, rooms have no equipment), but do not design the solution.
++
++## 3. Write the requirement
++
++- **Where**: the spec of its domain (`rooms.spec.md` for rooms, `bookings.spec.md` for bookings). A new spec file
++  only for a new domain.
++- **ID**: let `propose_requirement` pick the next one of that spec (RM-004, BK-008...).
++- **Statement**: one sentence in EARS (`When ..., the system shall ...`, `If ..., then the system shall ...`,
++  `While ..., when ..., the system shall ...`). It describes behaviour, not endpoints or classes.
++- **Acceptance criteria**: `Given / when / then`, one observable behaviour each, with concrete values
++  (10:00, 4 attendees, "atlas"). Each one must be testable by a single test. Cover:
++  - what the story asks for, including its own criteria rewritten in this form;
++  - the edge cases the existing rules make obvious (outside opening hours, a taken room, another user...).
++- **Do not invent rules.** If the story does not say what happens in a case that matters, it is an open question,
++  not a criterion.
++
++Create it with `propose_requirement` (status `proposed`). Then add the source and the open questions as a
++blockquote right under the `Status:` line. Blockquotes are notes: they are not part of the requirement text and
++do not trigger spec-change warnings.
++
++```markdown
++## BK-008: Move a booking
++Status: proposed
++
++> Source: https://github.com/amondejar/room-booking/issues/12
++> Open questions:
++> - Can a booking be moved to another room, or only to another time?
++> - Is moving allowed after the booking has started?
++
++When the organizer moves an upcoming booking to another time, the system shall ...
++
++- AC-1: Given ..., when ..., then ...
++```
++
++If the story is too vague to write even one testable criterion, do not create a requirement. Write the questions
++that would make it specifiable and go to step 5.
++
++## 4. Check
++
++```bash
++dotnet build
++dotnet spectrace report
++```
++
++The build must not report `ST0007` (duplicate ID) or `ST0008` (spec format). A `proposed` requirement is not
++enforced, so there must be no new `ST0003`/`ST0005`.
++
++## 5. Hand it over to a person
++
++- Work on a branch `spec/gh-<number>-<short-name>` and commit only the spec change.
++- Ask the person before writing anything on GitHub. With their go-ahead, open a pull request titled
++  `Spec for #<number>: <title>` with `Refs #<number>` in the body (not `Closes`: the issue closes when the
++  implementation is merged), and list the open questions in it.
++- Never change the status to `approved` yourself, and never implement the requirement in the same task.
++
++## In your summary
++
++List: the issue, the requirement ID and spec file, the criteria you wrote, which of them came from the story and
++which from existing rules, and the open questions.
+diff --git a/.github/ISSUE_TEMPLATE/config.yml b/.github/ISSUE_TEMPLATE/config.yml
+new file mode 100644
+index 0000000..0086358
+--- /dev/null
++++ b/.github/ISSUE_TEMPLATE/config.yml
+@@ -0,0 +1 @@
++blank_issues_enabled: true
+diff --git a/.github/ISSUE_TEMPLATE/user-story.yml b/.github/ISSUE_TEMPLATE/user-story.yml
+new file mode 100644
+index 0000000..e72252f
+--- /dev/null
++++ b/.github/ISSUE_TEMPLATE/user-story.yml
+@@ -0,0 +1,48 @@
++name: User story
++description: Something a user needs from RoomBooking. It becomes a requirement in specs/ before anyone writes code.
++title: "[Story] "
++labels: ["user-story"]
++body:
++  - type: markdown
++    attributes:
++      value: |
++        Describe the need, not the solution. An agent or a developer turns this story into a requirement
++        in `specs/*.spec.md` (status `proposed`), and the team approves it in a pull request.
++  - type: input
++    id: as-a
++    attributes:
++      label: As a
++      placeholder: organizer, employee, facilities team...
++    validations:
++      required: true
++  - type: textarea
++    id: i-want
++    attributes:
++      label: I want
++      placeholder: to move a booking to another time without cancelling it
++    validations:
++      required: true
++  - type: textarea
++    id: so-that
++    attributes:
++      label: So that
++      placeholder: I keep the room and the attendees do not get a new invitation
++    validations:
++      required: true
++  - type: textarea
++    id: acceptance-criteria
++    attributes:
++      label: Acceptance criteria
++      description: One per line. Given / When / Then if you can, plain sentences are fine too. Leave it empty if you are not sure yet.
++      placeholder: |
++        - Given a booking tomorrow at 10:00, when I move it to 12:00 and the room is free, then it is moved.
++        - Given the room is taken at 12:00, when I move it, then I get an error and the booking stays at 10:00.
++    validations:
++      required: false
++  - type: textarea
++    id: notes
++    attributes:
++      label: Notes
++      description: Context, examples, links, anything that is still open.
++    validations:
++      required: false
+diff --git a/README.md b/README.md
+index 3ab0751..785da96 100644
+--- a/README.md
++++ b/README.md
+@@ -98,6 +98,21 @@ Implement BK-007 with its tests. Follow the spectrace skill.
+ `dotnet spectrace context BK-007` shows what the agent receives: the statement, the criteria, where the code goes and
+ which files to read first.
+ 
++## From a user story to a spec
++
++New work starts as a GitHub issue with the **User story** template (`.github/ISSUE_TEMPLATE/user-story.yml`).
++Before anyone writes code, the story becomes a requirement in `specs/` with status `proposed`, and the team
++approves it in a pull request. The `story-to-spec` skill (`.claude/skills/story-to-spec/SKILL.md`) teaches a coding
++agent to do that first step:
++
++```text
++Turn issue #12 into a spec. Follow the story-to-spec skill.
++```
++
++The agent reads the issue with `gh`, checks the existing requirements and code through the SpecTrace MCP server,
++writes an EARS statement with testable criteria, and lists what the story leaves open instead of deciding it.
++The source issue is kept as a note under the requirement (`> Source: ...`).
++
+ ## CI
+ 
+ `.github/workflows/ci.yml` builds with the SpecTrace diagnostics as errors, runs the tests and publishes the
+-- 
+2.43.0
+
