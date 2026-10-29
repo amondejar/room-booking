@@ -90,4 +90,15 @@ public class RoomsApiTests
 
         Assert.Equal(new[] { new TimeSlot(new(8, 0), new(20, 0)) }, availability.Slots.ToArray());
     }
+
+    [Fact]
+    [Verifies(Requirements.RM_003, AcceptanceCriteria.RM_003.AC_4)]
+    public async Task Availability_of_an_unknown_room_is_not_found()
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var response = await api.Client.GetAsync($"/rooms/nope/availability?date={TestApi.Day:yyyy-MM-dd}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }
