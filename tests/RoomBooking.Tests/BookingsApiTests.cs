@@ -151,6 +151,31 @@ public class BookingsApiTests
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("atlas")]
+    [InlineData("boreal")]
+    [InlineData("cosmos")]
+    [Verifies(Requirements.BK_003, AcceptanceCriteria.BK_003.AC_3)]
+    public async Task Zero_attendees_is_rejected(string roomId)
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var response = await api.BookAsync(roomId, TestApi.At(10), TestApi.At(11), attendees: 0);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_003, AcceptanceCriteria.BK_003.AC_4)]
+    public async Task A_single_attendee_is_allowed()
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var response = await api.BookAsync("atlas", TestApi.At(10), TestApi.At(11), attendees: 1);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     // ---------- BK-004: Opening hours and duration ----------
 
     [Theory]
@@ -164,6 +189,19 @@ public class BookingsApiTests
         var response = await api.BookAsync("atlas", TestApi.At(fromHour, fromMinute), TestApi.At(toHour, toMinute));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_004, AcceptanceCriteria.BK_004.AC_1)]
+    public async Task Bookings_from_opening_or_until_closing_time_are_allowed()
+    {
+        await using var api = await TestApi.StartAsync();
+
+        var fromOpening = await api.BookAsync("atlas", TestApi.At(8), TestApi.At(9));
+        var untilClosing = await api.BookAsync("atlas", TestApi.At(19), TestApi.At(20));
+
+        Assert.Equal(HttpStatusCode.Created, fromOpening.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, untilClosing.StatusCode);
     }
 
     [Fact]
@@ -184,6 +222,17 @@ public class BookingsApiTests
     public async Task Bookings_in_the_past_are_rejected()
     {
         await using var api = await TestApi.StartAsync(TestApi.At(12));
+
+        var response = await api.BookAsync("atlas", TestApi.At(10), TestApi.At(11));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_004, AcceptanceCriteria.BK_004.AC_3)]
+    public async Task A_booking_starting_right_now_is_rejected()
+    {
+        await using var api = await TestApi.StartAsync(TestApi.At(10));
 
         var response = await api.BookAsync("atlas", TestApi.At(10), TestApi.At(11));
 
@@ -229,6 +278,18 @@ public class BookingsApiTests
         var response = await api.CancelAsync(booking.Id, "ana@example.com");
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    [Verifies(Requirements.BK_005, AcceptanceCriteria.BK_005.AC_4)]
+    public async Task Cancelling_an_unknown_booking_is_not_found()
+    {
+        await using var api = await TestApi.StartAsync();
+        await api.BookOkAsync("atlas", TestApi.At(10), TestApi.At(11));
+
+        var response = await api.CancelAsync(Guid.NewGuid(), "ana@example.com");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     // ---------- BK-006: My upcoming bookings ----------

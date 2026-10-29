@@ -5,6 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <!-- SpecTrace version used by every project. -->
-    <SpecTraceVersion>0.4.1-preview.1</SpecTraceVersion>
+    <SpecTraceVersion>0.7.1-preview.1</SpecTraceVersion>
   </PropertyGroup>
 </Project>
