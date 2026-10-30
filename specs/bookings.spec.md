@@ -92,7 +92,7 @@ While a booking is Active and has not started, when its organizer moves it to an
 the system shall keep the same booking with the new time range if the new range meets the booking rules and does not
 overlap another active booking of the room, and otherwise leave the booking unchanged.
 
-- AC-1: Given an upcoming active booking of room "atlas" from 10:00 to 11:00 and atlas free from 12:00 to 13:00, when its organizer moves it to 12:00-13:00, then it is moved: the booking keeps its id, stays Active and runs from 12:00 to 13:00.
+- AC-1: Given an upcoming active booking of room "atlas" from 10:00 to 11:00 and atlas free from 12:00 to 14:00, when its organizer moves it to 12:00-13:00, then it is moved: the booking keeps its id, stays Active and runs from 12:00 to 13:00.
 - AC-2: Given an upcoming booking of atlas from 10:00 to 11:00 and another active booking of atlas from 12:00 to 13:00, when the organizer moves the first booking to 12:00-13:00, then the response is 409 Conflict and the booking still runs from 10:00 to 11:00.
 - AC-3: Given an upcoming booking of atlas from 10:00 to 11:00, when a different user tries to move it to 12:00-13:00, then the response is 403 Forbidden and the booking still runs from 10:00 to 11:00.
 - AC-4: Given an upcoming booking of atlas from 10:00 to 11:00, when its organizer moves it to 10:30-11:30 and nothing else is booked in atlas, then it is moved.

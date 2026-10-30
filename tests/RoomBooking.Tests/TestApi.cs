@@ -85,6 +85,16 @@ public sealed class TestApi : IAsyncDisposable
         return Client.SendAsync(request);
     }
 
+    public Task<HttpResponseMessage> MoveAsync(Guid bookingId, DateTime start, DateTime end, string? user = "ana@example.com")
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/bookings/{bookingId}/move")
+        {
+            Content = JsonContent.Create(new MoveBookingDto(start, end), options: Json),
+        };
+        if (user != null) request.Headers.Add(BookingEndpoints.UserHeader, user);
+        return Client.SendAsync(request);
+    }
+
     public async Task<T> GetAsync<T>(string path, string? user = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, path);
