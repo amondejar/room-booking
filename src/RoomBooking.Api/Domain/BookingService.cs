@@ -141,6 +141,45 @@ public sealed class BookingService
         }
     }
 
+    /// <summary>Moves an upcoming active booking to another time range on the same day; otherwise leaves it unchanged.</summary>
+    [Implements(Requirements.BK_008)]
+    public Result<Booking> Move(Guid bookingId, DateTime start, DateTime end, string user)
+    {
+        lock (_store.Sync)
+        {
+            var booking = _store.Bookings.FirstOrDefault(b => b.Id == bookingId);
+            if (booking is null) return Error.NotFound($"Booking '{bookingId}' does not exist.");
+            if (!string.Equals(booking.Organizer, user, StringComparison.OrdinalIgnoreCase))
+            {
+                return Error.Forbidden("Only the organizer can move a booking.");
+            }
+
+            if (!booking.IsActive) return Error.Conflict("A cancelled booking cannot be moved.");
+            if (booking.Start <= Now) return Error.Conflict("The booking has already started and can no longer be moved.");
+
+            if (end <= start) return Error.Invalid("The end time must be after the start time.");
+            if (start.Date != booking.Start.Date || end.Date != start.Date)
+            {
+                return Error.Invalid("A booking can only be moved to another time on the same day.");
+            }
+
+            if (CheckSchedule(new BookingRequest(booking.RoomId, booking.Title, start, end, booking.Attendees)) is { } scheduleError)
+            {
+                return scheduleError;
+            }
+
+            var conflict = _store.Bookings.FirstOrDefault(b =>
+                b.Id != booking.Id && b.RoomId == booking.RoomId && b.IsActive && b.Overlaps(start, end));
+            if (conflict is not null)
+            {
+                return Error.Conflict($"The room is already booked from {conflict.Start:HH:mm} to {conflict.End:HH:mm}.");
+            }
+
+            booking.Move(start, end);
+            return booking;
+        }
+    }
+
     [Implements(Requirements.BK_006)]
     public IReadOnlyList<Booking> ListUpcoming(string organizer)
     {
